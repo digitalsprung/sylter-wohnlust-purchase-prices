@@ -106,13 +106,6 @@ const run = async () => {
 
       if (wawiCost != cost) {
         count++
-        console.log({
-          sku,
-          cost,
-          wawiCost,
-          inventoryItemId: item.id
-        })
-
         console.log("Aktualisiere Einkaufspreise für Produkt", sku, "von", cost, "auf", wawiCost)
 
         await shopify.inventoryItem.update(item.id, {cost}).catch(err => {

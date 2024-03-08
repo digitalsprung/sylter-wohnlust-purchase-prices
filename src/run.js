@@ -27,7 +27,6 @@ const getShopifyProducts = () => {
 
       params = products.nextPageParameters;
 
-      console.log("PRODUCTS", allProducts?.length)
       if (allProducts?.length >= max) {
         resolve(allProducts)  
         return
@@ -61,13 +60,9 @@ const getXentralData = () => {
 
 const run = async () => {
 
-  let urlCsvFile = process.env.URL
-
-  // read csv data from url
-
-  
+  console.log("Lade Xentral Daten von URL...")
   const xentralData = await getXentralData()
-  console.log("xentralData", xentralData.length)
+  console.log("Xentral Daten:", xentralData.length)
 
   let shopifyConfig = {
     shopName: process.env.SHOP_NAME,
@@ -78,12 +73,45 @@ const run = async () => {
   }
   shopify = new Shopify(shopifyConfig)
 
-  
-  return new Promise(async (resolve, reject) => {
-    const allProducts = await getShopifyProducts()
-    
-    console.log("allProducts", allProducts.length)
-  })
+
+  console.log("Lade Shopify Produkte...")
+  const allProducts = await getShopifyProducts()
+  console.log("Shopify Produkte:", allProducts.length)
+
+  const inventoryItemIds = allProducts.map(product => product.variants.map(variant => variant.inventory_item_id)) 
+  const allInventoryItems = []
+  console.log("Lade Shopify Inventory Items...")
+  for (let i = 0; i < allProducts.length; i += 100) {
+    const items = inventoryItemIds.slice(i, i + 100)
+
+    const inventoryItems = await shopify.inventoryItem.list({ids: items.join(',')})
+    allInventoryItems.push(...inventoryItems)
+    await new Promise(resolve => setTimeout(resolve, 500))
+  }
+  console.log("Shopify Inventory Items:", allInventoryItems.length)
+
+  for (const item of allInventoryItems) {
+    const {sku, cost} = item
+    const wawiData = xentralData.find(data => data['Variant SKU']?.toLowerCase() === sku?.toLowerCase())
+
+    if (wawiData) {
+      let {'Variant Cost': wawiCost} = wawiData
+      wawiCost = parseFloat(wawiCost.replace(',', '.'))
+
+      if (wawiCost != cost) {
+        console.log({
+          sku,
+          cost,
+          wawiCost,
+          inventoryItemId: item.id
+        })
+      }
+      /*await shopify.inventoryItem.update(item.id, {cost}).catch(err => {
+        console.error("FEHLER beim Aktualisieren des Preises für das Produkt", sku)
+        console.error(err)
+      });*/
+    }
+  }
 }
 
-run()
+setTimeout(run, 1000)

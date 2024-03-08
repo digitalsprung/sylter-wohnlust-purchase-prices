@@ -4,7 +4,18 @@ import morgan from "morgan";
 
 import * as middleware from "./utils/middleware.js";
 import helloRoute from "./routes/helloRouter.js";
+import schedule from 'node-schedule';
+import syncPurchasePrices from './utils/syncPurchasePrices.js';
 
+schedule.scheduleJob('*/1 * * * *', function(){
+  /*syncPurchasePrices().catch(err => {
+    console.error("syncPurchasePrices", err.toString());
+  })*/
+});
+
+setTimeout(() => {
+  syncPurchasePrices()
+}, 1000)
 const app = express();
 
 // parse json request body

@@ -78,13 +78,18 @@ const run = async () => {
   const allProducts = await getShopifyProducts()
   console.log("Shopify Produkte:", allProducts.length)
 
-  const inventoryItemIds = allProducts.map(product => product.variants.map(variant => variant.inventory_item_id)) 
+  console.log("Lade Shopify Inventory Items Ids ...")
+  const inventoryItemIds = []
+  for (const product of allProducts) {
+    inventoryItemIds.push(...product.variants.map(variant => variant.inventory_item_id))
+  }
+  console.log("Shopify Inventory Items Ids:", inventoryItemIds.length)
   const allInventoryItems = []
   console.log("Lade Shopify Inventory Items...")
-  for (let i = 0; i < allProducts.length; i += 100) {
+  for (let i = 0; i < inventoryItemIds.length; i += 100) {
     const items = inventoryItemIds.slice(i, i + 100)
 
-    const inventoryItems = await shopify.inventoryItem.list({ids: items.join(',')})
+    const inventoryItems = await shopify.inventoryItem.list({ids: items.join(','), limit: 250})
     allInventoryItems.push(...inventoryItems)
     await new Promise(resolve => setTimeout(resolve, 500))
   }
@@ -108,7 +113,7 @@ const run = async () => {
         count++
         console.log("Aktualisiere Einkaufspreise für Produkt", sku, "von", cost, "auf", wawiCost)
 
-        await shopify.inventoryItem.update(item.id, {cost}).catch(err => {
+        await shopify.inventoryItem.update(item.id, {cost: wawiCost}).catch(err => {
           console.error("FEHLER beim Aktualisieren des Preises für das Produkt", sku)
           console.error(err)
         });

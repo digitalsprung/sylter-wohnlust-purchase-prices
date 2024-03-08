@@ -90,28 +90,41 @@ const run = async () => {
   }
   console.log("Shopify Inventory Items:", allInventoryItems.length)
 
+  let count = 0
+  console.log("Aktualisiere Preise...")
   for (const item of allInventoryItems) {
-    const {sku, cost} = item
+    let {sku, cost} = item
     const wawiData = xentralData.find(data => data['Variant SKU']?.toLowerCase() === sku?.toLowerCase())
 
     if (wawiData) {
       let {'Variant Cost': wawiCost} = wawiData
       wawiCost = parseFloat(wawiCost.replace(',', '.'))
+      wawiCost = Math.round(wawiCost * 100) / 100
+
+      cost = parseFloat(cost)
+      cost = Math.round(cost * 100) / 100
 
       if (wawiCost != cost) {
+        count++
         console.log({
           sku,
           cost,
           wawiCost,
           inventoryItemId: item.id
         })
+
+        await shopify.inventoryItem.update(item.id, {cost}).catch(err => {
+          console.error("FEHLER beim Aktualisieren des Preises für das Produkt", sku)
+          console.error(err)
+        });
+
+        // wait 500 ms
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
-      /*await shopify.inventoryItem.update(item.id, {cost}).catch(err => {
-        console.error("FEHLER beim Aktualisieren des Preises für das Produkt", sku)
-        console.error(err)
-      });*/
     }
   }
+  console.log("Aktualisierte Preise:", count)
+  console.log("Fertig")
 }
 
 setTimeout(run, 1000)

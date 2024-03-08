@@ -96,7 +96,7 @@ const run = async () => {
   console.log("Shopify Inventory Items:", allInventoryItems.length)
 
   let count = 0
-  console.log("Aktualisiere Einkaufspreise...")
+  console.log("Aktualisiere Einkaufspreise...") 
   for (const item of allInventoryItems) {
     let {sku, cost} = item
     const wawiData = xentralData.find(data => data['Variant SKU']?.toLowerCase() === sku?.toLowerCase())

@@ -91,7 +91,7 @@ const run = async () => {
   console.log("Shopify Inventory Items:", allInventoryItems.length)
 
   let count = 0
-  console.log("Aktualisiere Preise...")
+  console.log("Aktualisiere Einkaufspreise...")
   for (const item of allInventoryItems) {
     let {sku, cost} = item
     const wawiData = xentralData.find(data => data['Variant SKU']?.toLowerCase() === sku?.toLowerCase())
@@ -113,6 +113,8 @@ const run = async () => {
           inventoryItemId: item.id
         })
 
+        console.log("Aktualisiere Einkaufspreise für Produkt", sku, "von", cost, "auf", wawiCost)
+
         await shopify.inventoryItem.update(item.id, {cost}).catch(err => {
           console.error("FEHLER beim Aktualisieren des Preises für das Produkt", sku)
           console.error(err)
@@ -123,7 +125,7 @@ const run = async () => {
       }
     }
   }
-  console.log("Aktualisierte Preise:", count)
+  console.log("Aktualisierte Einkaufspreise:", count)
   console.log("Fertig")
 }
 
